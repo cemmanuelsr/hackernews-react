@@ -1,6 +1,8 @@
 import React from 'react';
-import Link from './Link';
 import { useQuery, gql } from '@apollo/client';
+
+import Link from './Link';
+
 
 export const FEED_QUERY = gql`
   {
@@ -22,9 +24,53 @@ export const FEED_QUERY = gql`
   }
 `
 
+const NEW_LINKS_SUBSCRIPTION = gql`
+  subscription {
+    newLink {
+      id
+      url
+      description
+      createdAt
+      postedBy {
+        id
+        name
+      }
+      voters {
+        id
+      }
+    }
+  }
+`;
+
 const LinkList = () => {
 
-  const { data } = useQuery(FEED_QUERY);
+  const {
+    data,
+    loading,
+    error,
+    subscribeToMore
+  } = useQuery(FEED_QUERY);
+
+
+  subscribeToMore({
+    document: NEW_LINKS_SUBSCRIPTION,
+    updateQuery: (prev, { subscriptionData }) => {
+      if (!subscriptionData.data) return prev;
+      const newLink = subscriptionData.data.newLink;
+      const exists = prev.feed.links.find(
+        ({ id }) => id === newLink.id
+      );
+      if (exists) return prev;
+
+      return Object.assign({}, prev, {
+        feed: {
+          links: [newLink, ...prev.feed.links],
+          count: prev.feed.links.length + 1,
+          __typename: prev.feed.__typename
+        }
+      });
+    }
+  });
 
   return (
     <div>
