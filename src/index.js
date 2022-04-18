@@ -6,6 +6,7 @@ import { setContext } from '@apollo/client/link/context';
 
 import App from './components/App';
 import './styles/index.css';
+import { AUTH_TOKEN } from './constants';
 
 
 const httpLink = createHttpLink({
@@ -13,7 +14,7 @@ const httpLink = createHttpLink({
 });
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(AUTH_TOKEN);
   return {
     headers: {
       ...headers,
